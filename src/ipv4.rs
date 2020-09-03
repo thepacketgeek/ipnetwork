@@ -1,5 +1,5 @@
 use crate::common::{cidr_parts, parse_prefix, IpNetworkError};
-use std::{fmt, net::Ipv4Addr, str::FromStr, convert::TryFrom};
+use std::{convert::TryFrom, fmt, net::Ipv4Addr, str::FromStr};
 
 const IPV4_BITS: u8 = 32;
 
@@ -268,6 +268,28 @@ impl From<Ipv4Addr> for Ipv4Network {
             addr: a,
             prefix: 32,
         }
+    }
+}
+
+/// Creates an `Ipv4Network` from an Ipv4Addr & prefix length tuple.
+///
+/// # Examples
+///
+/// ```
+/// use std::net::Ipv4Addr;
+/// use ipnetwork::Ipv4Network;
+/// use std::convert::TryInto;
+///
+/// let addr= Ipv4Addr::new(192, 168, 0, 0);
+/// let new = Ipv4Network::new(addr, 23).unwrap();
+/// let from_tuple: Ipv4Network = (addr, 23).try_into().unwrap();
+/// assert_eq!(new.ip(), from_tuple.ip());
+/// assert_eq!(new.prefix(), from_tuple.prefix());
+/// ```
+impl TryFrom<(Ipv4Addr, u8)> for Ipv4Network {
+    type Error = IpNetworkError;
+    fn try_from(network: (Ipv4Addr, u8)) -> Result<Ipv4Network, Self::Error> {
+        Ipv4Network::new(network.0, network.1)
     }
 }
 

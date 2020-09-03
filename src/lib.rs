@@ -2,14 +2,15 @@
 //! Rust.
 #![crate_type = "lib"]
 #![doc(html_root_url = "https://docs.rs/ipnetwork/0.17.0")]
-
-#![deny(missing_copy_implementations,
+#![deny(
+    missing_copy_implementations,
     missing_debug_implementations,
     unsafe_code,
     unused_extern_crates,
-    unused_import_braces)]
+    unused_import_braces
+)]
 
-use std::{fmt, net::IpAddr, str::FromStr, convert::TryFrom};
+use std::{convert::TryFrom, fmt, net::IpAddr, str::FromStr};
 
 mod common;
 mod ipv4;
@@ -318,6 +319,39 @@ impl From<IpAddr> for IpNetwork {
         match addr {
             IpAddr::V4(a) => IpNetwork::V4(Ipv4Network::from(a)),
             IpAddr::V6(a) => IpNetwork::V6(Ipv6Network::from(a)),
+        }
+    }
+}
+
+/// Creates an `Ipv4Network` from an Ipv4Addr & prefix length tuple.
+///
+/// # Examples
+///
+/// ```
+/// use std::net::IpAddr;
+/// use ipnetwork::IpNetwork;
+/// use std::convert::TryInto;
+///
+/// // Ipv4
+/// let addr: IpAddr = "192.168.0.0".parse().unwrap();
+/// let new = IpNetwork::new(addr.into(), 23).unwrap();
+/// let from_tuple: IpNetwork = (addr, 23).try_into().unwrap();
+/// assert_eq!(new.ip(), from_tuple.ip());
+/// assert_eq!(new.prefix(), from_tuple.prefix());
+///
+/// // Ipv6
+/// let addr: IpAddr = "3001:10:bc::".parse().unwrap();
+/// let new = IpNetwork::new(addr.into(), 56).unwrap();
+/// let from_tuple: IpNetwork = (addr, 56).try_into().unwrap();
+/// assert_eq!(new.ip(), from_tuple.ip());
+/// assert_eq!(new.prefix(), from_tuple.prefix());
+/// ```
+impl TryFrom<(IpAddr, u8)> for IpNetwork {
+    type Error = IpNetworkError;
+    fn try_from(network: (IpAddr, u8)) -> Result<IpNetwork, Self::Error> {
+        match network.0 {
+            IpAddr::V4(a) => Ipv4Network::try_from((a, network.1)).map(IpNetwork::V4),
+            IpAddr::V6(a) => Ipv6Network::try_from((a, network.1)).map(IpNetwork::V6),
         }
     }
 }

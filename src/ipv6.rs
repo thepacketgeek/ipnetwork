@@ -1,5 +1,5 @@
 use crate::common::{cidr_parts, parse_prefix, IpNetworkError};
-use std::{cmp, fmt, net::Ipv6Addr, str::FromStr, convert::TryFrom};
+use std::{cmp, convert::TryFrom, fmt, net::Ipv6Addr, str::FromStr};
 
 const IPV6_BITS: u8 = 128;
 const IPV6_SEGMENT_BITS: u8 = 16;
@@ -246,6 +246,28 @@ impl From<Ipv6Addr> for Ipv6Network {
             addr: a,
             prefix: 128,
         }
+    }
+}
+
+/// Creates an `Ipv6Network` from an Ipv6Addr & prefix length tuple.
+///
+/// # Examples
+///
+/// ```
+/// use std::net::Ipv6Addr;
+/// use ipnetwork::Ipv6Network;
+/// use std::convert::TryInto;
+///
+/// let addr= Ipv6Addr::new(0xff01, 0, 0, 0x17, 0, 0, 0, 0x2);
+/// let new = Ipv6Network::new(addr, 65).unwrap();
+/// let from_tuple: Ipv6Network = (addr, 65).try_into().unwrap();
+/// assert_eq!(new.ip(), from_tuple.ip());
+/// assert_eq!(new.prefix(), from_tuple.prefix());
+/// ```
+impl TryFrom<(Ipv6Addr, u8)> for Ipv6Network {
+    type Error = IpNetworkError;
+    fn try_from(network: (Ipv6Addr, u8)) -> Result<Ipv6Network, Self::Error> {
+        Ipv6Network::new(network.0, network.1)
     }
 }
 
